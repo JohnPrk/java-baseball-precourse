@@ -1,83 +1,151 @@
 package baseball;
 
 import org.assertj.core.api.Assertions;
+import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.DisplayName;
 import org.junit.jupiter.api.Test;
 
-import java.util.ArrayList;
-import java.util.List;
+import java.util.Arrays;
 
 class BallNumbersTest {
 
-    @Test
-    @DisplayName("BallNumber 리스트 길이가 3인 경우, get 메서드로 확인")
-    public void 정상() {
-        //given
-        String one = "1";
-        String two = "2";
-        String three = "3";
-        List<BallNumber> number = new ArrayList<>();
-        number.add(new BallNumber(one));
-        number.add(new BallNumber(two));
-        number.add(new BallNumber(three));
+  private BallNumbers ballNumbers;
 
-        //when
-        BallNumbers ballNumbers = new BallNumbers(number);
+  @BeforeEach
+  public void init() {
+    ballNumbers = new BallNumbers(
+        Arrays.asList(new BallNumber(0, "4"), new BallNumber(1, "5"), new BallNumber(2, "6")));
+  }
 
-        //then
-        Assertions.assertThat(ballNumbers.getNumbers().get(0).getNumber()).isEqualTo(one);
-        Assertions.assertThat(ballNumbers.getNumbers().get(1).getNumber()).isEqualTo(two);
-        Assertions.assertThat(ballNumbers.getNumbers().get(2).getNumber()).isEqualTo(three);
-    }
+  @Test
+  void 낫띵_체크() {
 
-    @Test
-    @DisplayName("BallNumber 리스트의 길이가 3보다 작은 경우 IllegalArgumentException 발생")
-    public void 리스트의길이가3보다작다() {
-        //given
-        List<BallNumber> number = new ArrayList<>();
-        number.add(new BallNumber("1"));
-        number.add(new BallNumber("2"));
+    //given
+    BallNumbers userBallNumbers = new BallNumbers(
+        Arrays.asList(new BallNumber(0, "1"), new BallNumber(1, "2"), new BallNumber(2, "3")));
 
-        //when
+    //when
+    MatchResult matchResult = ballNumbers.count(userBallNumbers);
 
-        //then
-        Assertions.assertThatThrownBy(() -> {
-            new BallNumbers(number);
-        }).isInstanceOf(IllegalArgumentException.class);
-    }
+    Assertions.assertThat(matchResult.getStrike()).isEqualTo(0);
+    Assertions.assertThat(matchResult.getBall()).isEqualTo(0);
+  }
 
-    @Test
-    @DisplayName("BallNumber 리스트의 길이가 3보다 큰 경우 IllegalArgumentException 발생")
-    public void 리스트의길이가3보다크다() {
-        //given
-        List<BallNumber> number = new ArrayList<>();
-        number.add(new BallNumber("1"));
-        number.add(new BallNumber("2"));
-        number.add(new BallNumber("3"));
-        number.add(new BallNumber("4"));
+  @Test
+  void 원_스트라이크_원_볼_체크() {
 
-        //when
+    //given
+    BallNumbers userBallNumbers = new BallNumbers(
+        Arrays.asList(new BallNumber(0, "4"), new BallNumber(1, "6"), new BallNumber(2, "2")));
 
-        //then
-        Assertions.assertThatThrownBy(() -> {
-            new BallNumbers(number);
-        }).isInstanceOf(IllegalArgumentException.class);
-    }
+    //when
+    MatchResult matchResult = ballNumbers.count(userBallNumbers);
 
-    @Test
-    @DisplayName("BallNumber 리스트에 중복이 있는 경우 IllegalArgumentException 발생")
-    public void 중복() {
-        //given
-        List<BallNumber> number = new ArrayList<>();
-        number.add(new BallNumber("1"));
-        number.add(new BallNumber("2"));
-        number.add(new BallNumber("2"));
+    Assertions.assertThat(matchResult.getStrike()).isEqualTo(1);
+    Assertions.assertThat(matchResult.getBall()).isEqualTo(1);
+  }
 
-        //when
+  @Test
+  void 쓰리_스트라이크_체크() {
 
-        //then
-        Assertions.assertThatThrownBy(() -> {
-            new BallNumbers(number);
-        }).isInstanceOf(IllegalArgumentException.class);
-    }
+    //given
+    BallNumbers userBallNumbers = new BallNumbers(
+        Arrays.asList(new BallNumber(0, "4"), new BallNumber(1, "5"), new BallNumber(2, "6")));
+
+    //when
+    MatchResult matchResult = ballNumbers.count(userBallNumbers);
+
+    Assertions.assertThat(matchResult.getStrike()).isEqualTo(3);
+    Assertions.assertThat(matchResult.getBall()).isEqualTo(0);
+    Assertions.assertThat(matchResult.endGame()).isTrue();
+  }
+
+  @Test
+  void 낫띵_부분_체크() {
+
+    //given
+    BallNumber ballNumber = new BallNumber(0, "1");
+
+    //when
+    BallStatus ballStatus = this.ballNumbers.count(ballNumber);
+
+    //then
+    Assertions.assertThat(ballStatus).isEqualTo(BallStatus.NOTHING);
+  }
+
+  @Test
+  void 볼_부분_체크() {
+
+    //given
+    BallNumber ballNumber = new BallNumber(2, "4");
+
+    //when
+    BallStatus ballStatus = this.ballNumbers.count(ballNumber);
+
+    //then
+    Assertions.assertThat(ballStatus).isEqualTo(BallStatus.BALL);
+  }
+
+  @Test
+  void 스트라이크_부분_체크() {
+
+    //given
+    BallNumber ballNumber = new BallNumber(0, "4");
+
+    //when
+    BallStatus ballStatus = this.ballNumbers.count(ballNumber);
+
+    //then
+    Assertions.assertThat(ballStatus).isEqualTo(BallStatus.STRIKE);
+  }
+
+  @Test
+  @DisplayName("BallNumber 리스트 길이가 3인 경우,")
+  public void 길이_범위_3_정상_테스트() {
+
+    //then
+    Assertions.assertThatCode(() -> {
+      new BallNumbers(
+          Arrays.asList(new BallNumber(0, "1"), new BallNumber(1, "2"), new BallNumber(2, "3")));
+    }).doesNotThrowAnyException();
+  }
+
+  @Test
+  @DisplayName("BallNumber 리스트 길이가 2,4인 경우 IllegalArgumentException 발생(경계값 테스트)")
+  public void 길이_범위_초과_경계값_테스트() {
+
+    //then
+
+    // 리스트 길이 = 2인 경우
+    Assertions.assertThatThrownBy(() -> {
+      new BallNumbers(Arrays.asList(new BallNumber(0, "1"), new BallNumber(1, "2")));
+    }).isInstanceOf(IllegalArgumentException.class);
+
+    // 리스트 길이 = 4인 경우
+    Assertions.assertThatThrownBy(() -> {
+      new BallNumbers(
+          Arrays.asList(new BallNumber(0, "1"), new BallNumber(1, "2"), new BallNumber(2, "3"),
+              new BallNumber(3, "4")));
+    }).isInstanceOf(IllegalArgumentException.class);
+  }
+
+  @Test
+  public void 입력값_중복_테스트() {
+
+    //then
+    Assertions.assertThatThrownBy(() -> {
+      new BallNumbers(
+          Arrays.asList(new BallNumber(0, "1"), new BallNumber(1, "1"), new BallNumber(1, "3")));
+    }).isInstanceOf(IllegalArgumentException.class);
+  }
+
+  @Test
+  public void 인덱스_중복_테스트() {
+
+    //then
+    Assertions.assertThatThrownBy(() -> {
+      new BallNumbers(
+          Arrays.asList(new BallNumber(0, "1"), new BallNumber(1, "2"), new BallNumber(1, "3")));
+    }).isInstanceOf(IllegalArgumentException.class);
+  }
 }
