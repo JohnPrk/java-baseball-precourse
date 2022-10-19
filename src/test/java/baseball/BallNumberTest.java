@@ -1,79 +1,111 @@
 package baseball;
 
 import org.assertj.core.api.Assertions;
+import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.DisplayName;
 import org.junit.jupiter.api.Test;
 import org.junit.jupiter.params.ParameterizedTest;
 import org.junit.jupiter.params.provider.ValueSource;
 
+
 class BallNumberTest {
 
-    @ParameterizedTest
-    @ValueSource(strings = {"1", "2", "3", "4", "5", "6", "7", "8", "9"})
-    @DisplayName("1-9까지의 정상적인 값이 들어갈 때, get 메서드로 확인")
-    public void 정상(String str) {
-        //given
+  private BallNumber ballNumber;
 
-        //when
-        BallNumber ballNumber = new BallNumber(str);
+  @BeforeEach
+  public void init() {
+    ballNumber = new BallNumber(1, "4");
+  }
 
-        //then
-        Assertions.assertThat(ballNumber.getNumber()).isEqualTo(str);
-    }
+  /**
+   * index와 number값을 기준으로 BallStatus(STRIKE, BALL, NOTHING) 체크
+   */
 
+  @Test
+  public void 낫띵_체크() {
 
-    @ParameterizedTest
-    @ValueSource(strings = {"a", "A", "ㄱ", "ㅏ", "-", "!", "@", "?"})
-    @DisplayName("문자가 정수가 아닌 문자인 경우 IllegalArgumentException 발생")
-    public void 문자(String str) {
-        //given
+    //when
+    BallStatus ballStatus = ballNumber.check(new BallNumber(2, "5"));
 
-        //when
+    //then
+    Assertions.assertThat(ballStatus).isEqualTo(BallStatus.NOTHING);
+  }
 
-        //then
-        Assertions.assertThatThrownBy(() -> {
-            new BallNumber(str);
-        }).isInstanceOf(IllegalArgumentException.class);
-    }
+  @Test
+  public void 볼_체크() {
 
-    @Test
-    @DisplayName("문자가 1보다 작은 경우 IllegalArgumentException 발생")
-    public void 숫자가0이다() {
-        //given
-        String str = "0";
+    //when
+    BallStatus ballStatus = ballNumber.check(new BallNumber(2, "4"));
 
-        //when
+    //then
+    Assertions.assertThat(ballStatus).isEqualTo(BallStatus.BALL);
+  }
 
-        //then
-        Assertions.assertThatThrownBy(() -> {
-            new BallNumber(str);
-        }).isInstanceOf(IllegalArgumentException.class);
-    }
+  @Test
+  public void 스트라이크_체크() {
 
-    @ParameterizedTest
-    @ValueSource(strings = {"-1", "-10", "-100"})
-    public void 숫자가음수다(String str) {
-        //given
+    //when
+    BallStatus ballStatus = ballNumber.check(new BallNumber(1, "4"));
 
-        //when
+    //then
+    Assertions.assertThat(ballStatus).isEqualTo(BallStatus.STRIKE);
+  }
 
-        //then
-        Assertions.assertThatThrownBy(() -> {
-            new BallNumber(str);
-        }).isInstanceOf(IllegalArgumentException.class);
-    }
+  /**
+   * 생성자 생성시 유효성 검사 체크(문자 체크, index 길이 체크)
+   */
 
-    @ParameterizedTest
-    @ValueSource(strings = {"10", "11", "100", "1000", "10000"})
-    @DisplayName("문자가 9 보다 큰 경우 IllegalArgumentException 발생")
-    public void 숫자가9이상이다(String str) {
-        //given
+  @ParameterizedTest
+  @ValueSource(strings = {"1", "9"})
+  @DisplayName("1~9인 문자인 경우 정상(경계값 테스트)")
+  public void 숫자_범위_정상_경계값_테스트(String ballNumber) {
 
-        //when
+    //then
+    Assertions.assertThatCode(() -> {
+      new BallNumber(1, ballNumber);
+    }).doesNotThrowAnyException();
+  }
 
-        //then
-        Assertions.assertThatThrownBy(() -> {
-            new BallNumber(str);
-        }).isInstanceOf(IllegalArgumentException.class);
-    }
+  @ParameterizedTest
+  @ValueSource(strings = {"0", "10"})
+  @DisplayName("1~9의 범위를 넘는 문자인 경우 IllegalArgumentException 발생(경계값 테스트)")
+  public void 숫자_범위_초과_경계값_테스트(String ballNumber) {
+
+    //then
+    Assertions.assertThatThrownBy(() -> {
+      new BallNumber(1, ballNumber);
+    }).isInstanceOf(IllegalArgumentException.class);
+  }
+
+  @ParameterizedTest
+  @ValueSource(strings = {"a", "A", "ㄱ", "ㅏ", "-", "!"})
+  @DisplayName("문자가 정수가 아닌 문자인 경우 IllegalArgumentException 발생")
+  public void 문자가_정수가_아닌_문자(String ballNumber) {
+
+    //then
+    Assertions.assertThatThrownBy(() -> {
+      new BallNumber(1, ballNumber);
+    }).isInstanceOf(IllegalArgumentException.class);
+  }
+
+  @ParameterizedTest
+  @ValueSource(ints = {0, 2})
+  public void 인덱스_범위_정상_경계값_테스트(int index) {
+
+    //then
+    Assertions.assertThatCode(() -> {
+      new BallNumber(index, "1");
+    }).doesNotThrowAnyException();
+  }
+
+  @ParameterizedTest
+  @ValueSource(ints = {-1, 4})
+  @DisplayName("인덱스가 0~2의 값을 넘을 경우 IllegalArgumentException 발생")
+  public void 인덱스_범위_초과_경계값_테스트(int index) {
+
+    //then
+    Assertions.assertThatCode(() -> {
+      new BallNumber(index, "1");
+    }).isInstanceOf(IllegalArgumentException.class);
+  }
 }
